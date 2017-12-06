@@ -16,6 +16,13 @@ import java.util.concurrent.Future;
 
 import static digit.recogniser.MainApp.EXECUTOR_SERVICE;
 
+
+/**
+ * http://yann.lecun.com/exdb/mnist/
+ * database has 60.000 of training data and 10.000 of test data.
+ * The data contain black white hand written digit images of 28X28 pixels.
+ * Each pixel contains a number from 0-255 showing the gray scale, 0 while and 255 black.
+ */
 public class UI {
 
     private static final int FRAME_WIDTH = 1200;
@@ -28,9 +35,9 @@ public class UI {
     private JPanel drawAndDigitPredictionPanel;
     private SpinnerNumberModel modelTrainSize;
     private JSpinner trainField;
-    private int INITIAL_TRAIN_SIZE = 30000;
+    private int INITIAL_TRAIN_SIZE = 30000; // TODO: 12/6/2017 add upper border for dataset
     private final Font sansSerifBold = new Font("SansSerif", Font.BOLD, 18);
-    private int TEST_SIZE = 10000;
+    private int INITIAL_TEST_SIZE = 10000;
     private SpinnerNumberModel modelTestSize;
     private JSpinner testField;
     private JPanel resultPanel;
@@ -139,7 +146,7 @@ public class UI {
         JLabel ttL = new JLabel("Test Data");
         ttL.setFont(sansSerifBold);
         topPanel.add(ttL);
-        modelTestSize = new SpinnerNumberModel(TEST_SIZE, 1000, 10000, 500);
+        modelTestSize = new SpinnerNumberModel(INITIAL_TEST_SIZE, 1000, 10000, 500);
         testField = new JSpinner(modelTestSize);
         testField.setFont(sansSerifBold);
         topPanel.add(testField);

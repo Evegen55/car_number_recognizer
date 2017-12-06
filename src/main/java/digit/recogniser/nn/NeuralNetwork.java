@@ -23,7 +23,7 @@ public class NeuralNetwork {
     private static final IdxReader idxReader = new IdxReader();
     private MultilayerPerceptronClassificationModel model;
 
-    private static final String PATH_TO_TRAINED_SET = "D:\\1_Workspaces\\UNDER_VCS\\github\\NN\\new\\DigitRecognizer\\TrainedModels";
+    private static final String PATH_TO_TRAINED_SET = "TrainedModels";
     private static final String FOLDER_ROOT = "\\ModelWith";
     private static final String PATH_TO_TRAINED_SET_INIT = PATH_TO_TRAINED_SET + FOLDER_ROOT;
     private boolean isModelUploaded = false;
@@ -36,7 +36,16 @@ public class NeuralNetwork {
                 model = MultilayerPerceptronClassificationModel.load(PATH_TO_TRAINED_SET_INIT + initialTrainSize);
                 isModelUploaded = true;
             } catch (Exception e) {
-                e.printStackTrace();
+                /*
+                It tries to load metadata firstly
+                so it could throw next exception:
+                org.apache.hadoop.mapred.InvalidInputException: Input path does not exist: file:<your path>/TrainedModels/ModelWith30000/metadata
+                 */
+                if (e.getClass().getName().equals("org.apache.hadoop.mapred.InvalidInputException")) {
+                    System.out.println("The model doesn't exist");
+                } else {
+                    e.printStackTrace();
+                }
             }
         }
     }
