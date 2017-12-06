@@ -2,6 +2,8 @@ package digit.recogniser;
 
 import digit.recogniser.ui.ProgressBar;
 import digit.recogniser.ui.UI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.io.File;
@@ -13,13 +15,17 @@ import java.util.concurrent.Executors;
 
 public class MainApp {
 
+    private final static Logger LOGGER = LoggerFactory.getLogger(MainApp.class);
+
     public static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
 
     private static final JFrame MAIN_FRAME = new JFrame();
 
     public static void main(String... args) throws Exception {
 
+        LOGGER.info("Setting up the HADOOP_HOME environment variable");
         setHadoopHomeEnvironmentVariable();
+        LOGGER.info("The HADOOP_HOME environment variable is done");
 
         final ProgressBar progressBar = new ProgressBar(MAIN_FRAME,true);
         progressBar.showProgressBar("Collecting data this make take several seconds!");
