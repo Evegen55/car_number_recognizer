@@ -17,6 +17,10 @@ public class IdxReader {
         return getLabeledImages(INPUT_IMAGE_PATH, INPUT_LABEL_PATH, size);
     }
 
+    public java.util.List<LabeledImage> loadTestData(int size) throws IOException {
+        return getLabeledImages(INPUT_IMAGE_PATH_FOR_LOADING_TEST_DATA, RESOURCES_FOR_TRAIN_T10K_LABELS_IDX1_UBYTE, size);
+    }
+
     private List<LabeledImage> getLabeledImages(String inputImagePath, String inputLabelPath, int number) throws IOException {
         FileInputStream inLabel = null;
         FileInputStream inImage = null;
@@ -63,10 +67,5 @@ public class IdxReader {
             }
         }
     }
-
-    public java.util.List<LabeledImage> loadTestData(int size) throws IOException {
-        return getLabeledImages(INPUT_IMAGE_PATH_FOR_LOADING_TEST_DATA, RESOURCES_FOR_TRAIN_T10K_LABELS_IDX1_UBYTE, size);
-    }
-
 
 }
