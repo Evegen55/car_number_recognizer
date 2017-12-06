@@ -1,38 +1,38 @@
 package digit.recogniser.nn;
 
-/**
- * Created by klevis.ramo on 11/27/2017.
- */
-
 import digit.recogniser.data.IdxReader;
+import digit.recogniser.data.LabeledImage;
 import org.apache.spark.ml.classification.MultilayerPerceptronClassificationModel;
 import org.apache.spark.ml.classification.MultilayerPerceptronClassifier;
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import digit.recogniser.data.LabeledImage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
 
 public class NeuralNetwork {
 
-    private SparkSession sparkSession;
+    private final static Logger LOGGER = LoggerFactory.getLogger(NeuralNetwork.class);
 
-    private static final IdxReader idxReader = new IdxReader();
+    private SparkSession sparkSession;
     private MultilayerPerceptronClassificationModel model;
 
+    private static final IdxReader idxReader = new IdxReader();
     private static final String PATH_TO_TRAINED_SET = "TrainedModels";
     private static final String FOLDER_ROOT = "\\ModelWith";
     private static final String PATH_TO_TRAINED_SET_INIT = PATH_TO_TRAINED_SET + FOLDER_ROOT;
+
     private boolean isModelUploaded = false;
 
     public void init(final int initialTrainSize, final boolean erasePreviousModel) {
         initSparkSession();
         if (model == null || erasePreviousModel) {
             try {
-                System.out.println("Load model from trained set: " + FOLDER_ROOT + initialTrainSize);
+                LOGGER.info("Load model from trained set: " + FOLDER_ROOT + initialTrainSize);
                 model = MultilayerPerceptronClassificationModel.load(PATH_TO_TRAINED_SET_INIT + initialTrainSize);
                 isModelUploaded = true;
             } catch (Exception e) {
@@ -42,7 +42,7 @@ public class NeuralNetwork {
                 org.apache.hadoop.mapred.InvalidInputException: Input path does not exist: file:<your path>/TrainedModels/ModelWith30000/metadata
                  */
                 if (e.getClass().getName().equals("org.apache.hadoop.mapred.InvalidInputException")) {
-                    System.out.println("The model doesn't exist");
+                    LOGGER.error("The model doesn't exist");
                 } else {
                     e.printStackTrace();
                 }
@@ -72,7 +72,7 @@ public class NeuralNetwork {
         model.save(PATH_TO_TRAINED_SET + FOLDER_ROOT + trainData);
         init(trainData, true);
         if (isModelUploaded) {
-            System.out.println("NEURAL NETWORK trained with " + trainData + " has been uploaded successfully");
+            LOGGER.info("NEURAL NETWORK trained with " + trainData + " has been uploaded successfully");
         }
 
         evalOnTest(test);
@@ -85,7 +85,7 @@ public class NeuralNetwork {
         MulticlassClassificationEvaluator evaluator = new MulticlassClassificationEvaluator()
                 .setMetricName("accuracy");
 
-        System.out.println("Test set accuracy = " + evaluator.evaluate(predictionAndLabels));
+        LOGGER.info("Test set accuracy = " + evaluator.evaluate(predictionAndLabels));
     }
 
     private void initSparkSession() {

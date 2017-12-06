@@ -4,6 +4,8 @@ import com.mortennobel.imagescaling.ResampleFilters;
 import com.mortennobel.imagescaling.ResampleOp;
 import digit.recogniser.data.LabeledImage;
 import digit.recogniser.nn.NeuralNetwork;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
@@ -24,6 +26,8 @@ import static digit.recogniser.MainApp.EXECUTOR_SERVICE;
  * Each pixel contains a number from 0-255 showing the gray scale, 0 while and 255 black.
  */
 public class UI {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(UI.class);
 
     private static final int FRAME_WIDTH = 1200;
     private static final int FRAME_HEIGHT = 628;
@@ -53,7 +57,7 @@ public class UI {
         //By default the application has to load NN from prepared dataset
         NEURAL_NETWORK.init(INITIAL_TRAIN_SIZE, false);
         if (NEURAL_NETWORK.isModelUploaded()) {
-            System.out.println("NEURAL NETWORK trained with " + INITIAL_TRAIN_SIZE + " has been uploaded successfully");
+            LOGGER.info("NEURAL NETWORK trained with " + INITIAL_TRAIN_SIZE + " has been uploaded successfully");
         }
 
         // create main frame
@@ -71,7 +75,7 @@ public class UI {
 
         addSignature();
 
-        mainFrame.add(mainPanel,BorderLayout.CENTER);
+        mainFrame.add(mainPanel, BorderLayout.CENTER);
         mainFrame.setVisible(true);
 
     }
@@ -155,6 +159,7 @@ public class UI {
     }
 
     private void train_NN_inThread(ProgressBar progressBar) {
+        LOGGER.info("NEURAL_NETWORK starting train");
         Runnable runnable = () -> {
             try {
 
@@ -169,6 +174,7 @@ public class UI {
             }
         };
         final Future<?> future = EXECUTOR_SERVICE.submit(runnable);
+//        future.isDone()
     }
 
 

@@ -76,6 +76,11 @@
             <artifactId>log4j-core</artifactId>
             <version>${log4j.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-web</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-mllib_2.10 -->
         <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-mllib -->

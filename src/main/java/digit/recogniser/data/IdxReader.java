@@ -1,11 +1,16 @@
 package digit.recogniser.data;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class IdxReader {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(IdxReader.class);
 
     private static final String INPUT_IMAGE_PATH = "resources_for_train/train-images.idx3-ubyte";
     private static final String INPUT_LABEL_PATH = "resources_for_train/train-labels.idx1-ubyte";
@@ -45,7 +50,7 @@ public class IdxReader {
             for (int i = 0; i < number; i++) {
 
                 if (i % 1000 == 0) {
-                    System.out.println("Number of images extracted: " + i);
+                    LOGGER.info("Number of images extracted: " + i);
                 }
 
                 for (int p = 0; p < numberOfPixels; p++) {
@@ -55,7 +60,7 @@ public class IdxReader {
                 int label = inLabel.read();
                 all.add(new LabeledImage(label, imgPixels));
             }
-            System.out.println("Time in seconds" + ((System.currentTimeMillis() - start) / 1000d));
+            LOGGER.info("Time in seconds" + ((System.currentTimeMillis() - start) / 1000d));
             return all;
 
         } finally {
