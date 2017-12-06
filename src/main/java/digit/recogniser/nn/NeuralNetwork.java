@@ -58,6 +58,9 @@ public class NeuralNetwork {
         Dataset<Row> train = sparkSession.createDataFrame(labeledImages, LabeledImage.class).checkpoint();
         Dataset<Row> test = sparkSession.createDataFrame(testLabeledImages, LabeledImage.class).checkpoint();
 
+        //first layer is an image 28x28 pixels -> 784 pixels
+        //last layer is a digit from 0 to 9, the output is a one dimensional vector of size 10.
+        //The values of output vector are probabilities that the input is likely to be one of those digits.
         int[] layers = new int[]{784, 128, 64, 10};
 
         MultilayerPerceptronClassifier trainer = new MultilayerPerceptronClassifier()

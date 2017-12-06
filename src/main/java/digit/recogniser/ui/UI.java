@@ -31,7 +31,13 @@ public class UI {
 
     private static final int FRAME_WIDTH = 1200;
     private static final int FRAME_HEIGHT = 628;
+    private static final Font SANS_SERIF_BOLD = new Font("SansSerif", Font.BOLD, 18);
+
     private static final NeuralNetwork NEURAL_NETWORK = new NeuralNetwork();
+    private static final int INITIAL_TRAIN_SIZE = 30000;
+    private static final int INITIAL_TRAIN_SIZE_UPPER = 60000;
+    private static final int INITIAL_TEST_SIZE_UPPER = 10000;
+    private static final int INITIAL_TEST_SIZE = 10000;
 
     private DrawArea drawArea;
     private JFrame mainFrame;
@@ -39,9 +45,6 @@ public class UI {
     private JPanel drawAndDigitPredictionPanel;
     private SpinnerNumberModel modelTrainSize;
     private JSpinner trainField;
-    private int INITIAL_TRAIN_SIZE = 30000; // TODO: 12/6/2017 add upper border for dataset
-    private final Font sansSerifBold = new Font("SansSerif", Font.BOLD, 18);
-    private int INITIAL_TEST_SIZE = 10000;
     private SpinnerNumberModel modelTestSize;
     private JSpinner testField;
     private JPanel resultPanel;
@@ -55,9 +58,9 @@ public class UI {
     public void initUI() {
 
         //By default the application has to load NN from prepared dataset
-        NEURAL_NETWORK.init(INITIAL_TRAIN_SIZE, false);
+        NEURAL_NETWORK.init(INITIAL_TRAIN_SIZE_UPPER, false);
         if (NEURAL_NETWORK.isModelUploaded()) {
-            LOGGER.info("NEURAL NETWORK trained with " + INITIAL_TRAIN_SIZE + " has been uploaded successfully");
+            LOGGER.info("NEURAL NETWORK trained with " + INITIAL_TRAIN_SIZE_UPPER + " has been uploaded successfully");
         }
 
         // create main frame
@@ -83,22 +86,7 @@ public class UI {
     private void addActionPanel() {
         JButton recognize = new JButton("Recognize Digit");
         recognize.addActionListener(e -> {
-            Image drawImage = drawArea.getImage();
-            BufferedImage sbi = toBufferedImage(drawImage);
-            Image scaled = scale(sbi);
-            BufferedImage scaledBuffered = toBufferedImage(scaled);
-            double[] scaledPixels = transformImageToOneDimensionalVector(scaledBuffered);
-            LabeledImage labeledImage = new LabeledImage(0, scaledPixels);
-
-            LabeledImage predict = NEURAL_NETWORK.predict(labeledImage);
-
-            JLabel predictNumber = new JLabel("" + (int) predict.getLabel());
-            predictNumber.setForeground(Color.RED);
-            predictNumber.setFont(new Font("SansSerif", Font.BOLD, 128));
-            resultPanel.removeAll();
-            resultPanel.add(predictNumber);
-            resultPanel.updateUI();
-
+            retriveDrawedImageRecognizeAndWritePredictedDigit();
         });
         JButton clear = new JButton("Clear");
         clear.addActionListener(e -> {
@@ -110,6 +98,27 @@ public class UI {
         actionPanel.add(recognize);
         actionPanel.add(clear);
         drawAndDigitPredictionPanel.add(actionPanel);
+    }
+
+    private void retriveDrawedImageRecognizeAndWritePredictedDigit() {
+        final Image drawImage = drawArea.getImage();
+        final BufferedImage sbi = toBufferedImage(drawImage);
+        final Image scaled = scale(sbi);
+        final BufferedImage scaledBuffered = toBufferedImage(scaled);
+        final double[] scaledPixels = transformImageToOneDimensionalVector(scaledBuffered);
+        final LabeledImage labeledImage = new LabeledImage(0, scaledPixels);
+
+        LabeledImage predict = NEURAL_NETWORK.predict(labeledImage);
+        final double predictLabel = predict.getLabel();
+
+        final JLabel predictNumber = new JLabel("" + (int) predictLabel);
+        LOGGER.info("Probabilities is: " + predict.getFeatures().size());
+
+        predictNumber.setForeground(Color.RED);
+        predictNumber.setFont(new Font("SansSerif", Font.BOLD, 128));
+        resultPanel.removeAll();
+        resultPanel.add(predictNumber);
+        resultPanel.updateUI();
     }
 
     private void addDrawAreaAndPredictionArea() {
@@ -140,19 +149,19 @@ public class UI {
 
         topPanel.add(train);
         JLabel tL = new JLabel("Training Data");
-        tL.setFont(sansSerifBold);
+        tL.setFont(SANS_SERIF_BOLD);
         topPanel.add(tL);
-        modelTrainSize = new SpinnerNumberModel(INITIAL_TRAIN_SIZE, 10000, 60000, 1000);
+        modelTrainSize = new SpinnerNumberModel(INITIAL_TRAIN_SIZE, 10000, INITIAL_TRAIN_SIZE_UPPER, 1000);
         trainField = new JSpinner(modelTrainSize);
-        trainField.setFont(sansSerifBold);
+        trainField.setFont(SANS_SERIF_BOLD);
         topPanel.add(trainField);
 
         JLabel ttL = new JLabel("Test Data");
-        ttL.setFont(sansSerifBold);
+        ttL.setFont(SANS_SERIF_BOLD);
         topPanel.add(ttL);
-        modelTestSize = new SpinnerNumberModel(INITIAL_TEST_SIZE, 1000, 10000, 500);
+        modelTestSize = new SpinnerNumberModel(INITIAL_TEST_SIZE, 1000, INITIAL_TEST_SIZE_UPPER, 500);
         testField = new JSpinner(modelTestSize);
-        testField.setFont(sansSerifBold);
+        testField.setFont(SANS_SERIF_BOLD);
         topPanel.add(testField);
 
         mainPanel.add(topPanel, BorderLayout.NORTH);
@@ -178,19 +187,20 @@ public class UI {
     }
 
 
-    private static BufferedImage scale(BufferedImage imageToScale) {
-        ResampleOp resizeOp = new ResampleOp(28, 28);
+    private static BufferedImage scale(final BufferedImage imageToScale) {
+        final ResampleOp resizeOp = new ResampleOp(28, 28);
         resizeOp.setFilter(ResampleFilters.getLanczos3Filter());
-        BufferedImage filter = resizeOp.filter(imageToScale, null);
+        final BufferedImage filter = resizeOp.filter(imageToScale, null);
         return filter;
     }
 
-    private static BufferedImage toBufferedImage(Image img) {
+    private static BufferedImage toBufferedImage(final Image img) {
         // Create a buffered image with transparency
-        BufferedImage bimage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+        final BufferedImage bimage =
+                new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
 
         // Draw the image on to the buffered image
-        Graphics2D bGr = bimage.createGraphics();
+        final Graphics2D bGr = bimage.createGraphics();
         bGr.drawImage(img, 0, 0, null);
         bGr.dispose();
 

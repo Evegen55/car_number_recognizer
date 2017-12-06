@@ -14,6 +14,7 @@ public class LabeledImage implements Serializable {
     private double label;
     private Vector features;
 
+    // TODO: 12/6/2017 WHY DOUBLE???
     public LabeledImage(int label, double[] pixels) {
         this.label = label;
 //        Normalizer normalizer = new Normalizer();
