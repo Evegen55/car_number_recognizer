@@ -61,7 +61,7 @@ public class NeuralNetwork {
         //first layer is an image 28x28 pixels -> 784 pixels
         //last layer is a digit from 0 to 9, the output is a one dimensional vector of size 10.
         //The values of output vector are probabilities that the input is likely to be one of those digits.
-        int[] layers = new int[]{784, 128, 64, 10};
+        int[] layers = new int[]{784, 128, 64, 10}; // TODO: 12/6/2017 it can gets from UI
 
         MultilayerPerceptronClassifier trainer = new MultilayerPerceptronClassifier()
                 .setLayers(layers)
@@ -82,10 +82,10 @@ public class NeuralNetwork {
         evalOnTest(train);
     }
 
-    private void evalOnTest(Dataset<Row> test) {
-        Dataset<Row> result = model.transform(test);
-        Dataset<Row> predictionAndLabels = result.select("prediction", "label");
-        MulticlassClassificationEvaluator evaluator = new MulticlassClassificationEvaluator()
+    private void evalOnTest(final Dataset<Row> rowDataset) {
+        final Dataset<Row> result = model.transform(rowDataset);
+        final Dataset<Row> predictionAndLabels = result.select("prediction", "label");
+        final MulticlassClassificationEvaluator evaluator = new MulticlassClassificationEvaluator()
                 .setMetricName("accuracy");
 
         LOGGER.info("Test set accuracy = " + evaluator.evaluate(predictionAndLabels));

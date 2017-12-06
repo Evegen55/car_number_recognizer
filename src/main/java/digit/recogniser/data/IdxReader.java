@@ -45,7 +45,7 @@ public class IdxReader {
 
             int numberOfPixels = numberOfRows * numberOfColumns;
             double[] imgPixels = new double[numberOfPixels];
-            List<LabeledImage> all = new ArrayList();
+            List<LabeledImage> all = new ArrayList<>();
 
             long start = System.currentTimeMillis();
             for (int i = 0; i < number; i++) {
@@ -61,7 +61,7 @@ public class IdxReader {
                 int label = inLabel.read();
                 all.add(new LabeledImage(label, imgPixels));
             }
-            LOGGER.info("Time in seconds" + ((System.currentTimeMillis() - start) / 1000d));
+            LOGGER.info("Time to load LabeledImages in seconds: " + ((System.currentTimeMillis() - start) / 1000d));
             return all;
 
         } finally {
