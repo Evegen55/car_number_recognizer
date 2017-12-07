@@ -21,7 +21,6 @@ public class NeuralNetwork {
     private SparkSession sparkSession;
     private MultilayerPerceptronClassificationModel model;
 
-    private static final IdxReader idxReader = new IdxReader();
     private static final String PATH_TO_TRAINED_SET = "TrainedModels";
     private static final String FOLDER_ROOT = "\\ModelWith";
     private static final String PATH_TO_TRAINED_SET_INIT = PATH_TO_TRAINED_SET + FOLDER_ROOT;
@@ -53,10 +52,8 @@ public class NeuralNetwork {
     public void train(Integer trainData, Integer testFieldValue) {
         initSparkSession();
 
-        // TODO: 12/6/2017  do it in a concurrent
-        List<LabeledImage> labeledImages = idxReader.loadData(trainData);
-        List<LabeledImage> testLabeledImages = idxReader.loadTestData(testFieldValue);
-
+        List<LabeledImage> labeledImages = IdxReader.loadData(trainData);
+        List<LabeledImage> testLabeledImages = IdxReader.loadTestData(testFieldValue);
         Dataset<Row> train = sparkSession.createDataFrame(labeledImages, LabeledImage.class).checkpoint();
         Dataset<Row> test = sparkSession.createDataFrame(testLabeledImages, LabeledImage.class).checkpoint();
 

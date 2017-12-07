@@ -13,20 +13,25 @@ import static org.junit.Assert.*;
  */
 public class IdxReaderTest {
 
-    private IdxReader idxReader;
-
-    @Before
-    public void setUp() throws Exception {
-        idxReader = new IdxReader();
-    }
+    List<LabeledImage> labeledImages;
 
     @After
     public void tearDown() throws Exception {
     }
 
     @Test
-    public void loadData() throws Exception {
-        List<LabeledImage> labeledImages = idxReader.loadData(10000);
+    public void loadDataOne_Thousand() throws Exception {
+        labeledImages = IdxReader.loadData(1000);
+    }
+
+    @Test
+    public void loadData10_Thousand() throws Exception {
+        labeledImages = IdxReader.loadData(10000);
+    }
+
+    @Test
+    public void loadData60_Thousand() throws Exception {
+        labeledImages = IdxReader.loadData(60000);
     }
 
     @Test
