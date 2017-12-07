@@ -49,7 +49,7 @@ public class NeuralNetwork {
         }
     }
 
-    public void train(Integer trainData, Integer testFieldValue) {
+    public void train(Integer trainData, Integer testFieldValue, final boolean saveOrNot) {
         initSparkSession();
 
         List<LabeledImage> labeledImages = IdxReader.loadData(trainData);
@@ -70,16 +70,19 @@ public class NeuralNetwork {
 
         model = trainer.fit(train);
 
-        // after saving we have to load NN from trained data set
-        try {
-            model.save(PATH_TO_TRAINED_SET + FOLDER_ROOT + trainData);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (saveOrNot) {
+            // after saving we have to load NN from trained data set
+            try {
+                model.save(PATH_TO_TRAINED_SET + FOLDER_ROOT + trainData);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            init(trainData, true);
+            if (isModelUploaded) {
+                LOGGER.info("NEURAL NETWORK trained with " + trainData + " has been uploaded successfully");
+            }
         }
-        init(trainData, true);
-        if (isModelUploaded) {
-            LOGGER.info("NEURAL NETWORK trained with " + trainData + " has been uploaded successfully");
-        }
+
 
         evalOnTest(test);
         evalOnTest(train);

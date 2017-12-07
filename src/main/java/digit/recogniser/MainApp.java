@@ -6,12 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import java.io.File;
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static digit.recogniser.util.Util.setHadoopHomeEnvironmentVariable;
 
 public class MainApp {
 
@@ -27,7 +25,7 @@ public class MainApp {
         setHadoopHomeEnvironmentVariable();
         LOGGER.info("The HADOOP_HOME environment variable is done");
 
-        final ProgressBar progressBar = new ProgressBar(MAIN_FRAME,true);
+        final ProgressBar progressBar = new ProgressBar(MAIN_FRAME, true);
         progressBar.showProgressBar("Collecting data this make take several seconds!");
 
         final UI ui = new UI();
@@ -45,20 +43,4 @@ public class MainApp {
 
     }
 
-
-    private static void setHadoopHomeEnvironmentVariable() throws Exception {
-        final HashMap<String, String> hadoopEnvSetUp = new HashMap<>();
-        hadoopEnvSetUp.put("HADOOP_HOME", new File("resources_for_train/winutils-master/hadoop-2.8.1").getAbsolutePath());
-        final Class<?> processEnvironmentClass = Class.forName("java.lang.ProcessEnvironment");
-        final Field theEnvironmentField = processEnvironmentClass.getDeclaredField("theEnvironment");
-        theEnvironmentField.setAccessible(true);
-        final Map<String, String> env = (Map<String, String>) theEnvironmentField.get(null);
-        env.clear();
-        env.putAll(hadoopEnvSetUp);
-        final Field theCaseInsensitiveEnvironmentField = processEnvironmentClass.getDeclaredField("theCaseInsensitiveEnvironment");
-        theCaseInsensitiveEnvironmentField.setAccessible(true);
-        final Map<String, String> cienv = (Map<String, String>) theCaseInsensitiveEnvironmentField.get(null);
-        cienv.clear();
-        cienv.putAll(hadoopEnvSetUp);
-    }
 }

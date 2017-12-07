@@ -11,46 +11,48 @@ public class IdxReader {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(IdxReader.class);
 
-    private static final String INPUT_IMAGE_PATH = "resources_for_train/train-images.idx3-ubyte";
-    private static final String INPUT_LABEL_PATH = "resources_for_train/train-labels.idx1-ubyte";
+    public static final String INPUT_IMAGE_PATH = "resources_for_train/train-images.idx3-ubyte";
+    public static final String INPUT_LABEL_PATH = "resources_for_train/train-labels.idx1-ubyte";
 
-    private static final String INPUT_IMAGE_PATH_FOR_LOADING_TEST_DATA = "resources_for_train/t10k-images.idx3-ubyte";
-    private static final String RESOURCES_FOR_TRAIN_T10K_LABELS_IDX1_UBYTE = "resources_for_train/t10k-labels.idx1-ubyte";
+    public static final String INPUT_IMAGE_PATH_FOR_LOADING_TEST_DATA = "resources_for_train/t10k-images.idx3-ubyte";
+    public static final String RESOURCES_FOR_TRAIN_T10K_LABELS_IDX1_UBYTE = "resources_for_train/t10k-labels.idx1-ubyte";
 
+    /**
+     *
+     * @param size
+     * @return
+     */
     public static List<LabeledImage> loadData(final int size) {
         return getLabeledImages(INPUT_IMAGE_PATH, INPUT_LABEL_PATH, size);
     }
 
+    /**
+     *
+     * @param size
+     * @return
+     */
     public static List<LabeledImage> loadTestData(final int size) {
         return getLabeledImages(INPUT_IMAGE_PATH_FOR_LOADING_TEST_DATA, RESOURCES_FOR_TRAIN_T10K_LABELS_IDX1_UBYTE, size);
     }
 
-    private static List<LabeledImage> getLabeledImages(final String inputImagePath, final String inputLabelPath, final int amountOfDataSet) {
+    private static List<LabeledImage> getLabeledImages(final String inputImagePath,
+                                                       final String inputLabelPath,
+                                                       final int amountOfDataSet) {
 
         final List<LabeledImage> labeledImageArrayList = new ArrayList<>(amountOfDataSet);
 
         try (FileInputStream inImage = new FileInputStream(inputImagePath);
              FileInputStream inLabel = new FileInputStream(inputLabelPath)) {
 
-            // it reads the next byte of data (8 bits) then put them to left side of an int
-            // so the int is 32 bit is fully filled at the end of logic
-            // and it moves the cursor to a position after first 32 bits (4 bytes)
-            int magicNumberImages = (inImage.read() << 24) | (inImage.read() << 16) | (inImage.read() << 8) | (inImage.read());
-            int numberOfImages = (inImage.read() << 24) | (inImage.read() << 16) | (inImage.read() << 8) | (inImage.read());
-            System.out.println("magicNumberImages: " + magicNumberImages);
-            System.out.println("numberOfImages: " + numberOfImages);
+            // just skip the amount of a data
+            // see the test and description for dataset
+            inImage.skip(16);
+            inLabel.skip(8);
+            LOGGER.debug("Available bytes in inputImage stream after read: " + inImage.available());
+            LOGGER.debug("Available bytes in inputLabel stream after read: " + inLabel.available());
 
-            int numberOfRows = (inImage.read() << 24) | (inImage.read() << 16) | (inImage.read() << 8) | (inImage.read());
-            int numberOfColumns = (inImage.read() << 24) | (inImage.read() << 16) | (inImage.read() << 8) | (inImage.read());
-
-            // it reads the next byte of data (8 bits) then put them to left side of an int
-            // so the int is 32 bit is fully filled at the end of logic
-            // and it moves the cursor to a position after first 32 bits (4 bytes)
-            int magicNumberLabels = (inLabel.read() << 24) | (inLabel.read() << 16) | (inLabel.read() << 8) | (inLabel.read());
-            int numberOfLabels = (inLabel.read() << 24) | (inLabel.read() << 16) | (inLabel.read() << 8) | (inLabel.read());
-            System.out.println("magicNumberLabels: " + magicNumberLabels);
-            System.out.println("numberOfLabels: " + numberOfLabels);
-
+            int numberOfRows = 28;
+            int numberOfColumns = 28;
             int numberOfPixels = numberOfRows * numberOfColumns;
 
             //empty array for 784 pixels - the image from 28x28 pixels in a single row
