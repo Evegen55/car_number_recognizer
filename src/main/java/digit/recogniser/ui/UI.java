@@ -176,8 +176,6 @@ public class UI {
                 final Integer testFieldValue = (Integer) testField.getValue();
 
                 NEURAL_NETWORK.train(trainFieldValue, testFieldValue);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
             } finally {
                 progressBar.setVisible(false);
             }

@@ -50,11 +50,13 @@ public class NeuralNetwork {
         }
     }
 
-    public void train(Integer trainData, Integer testFieldValue) throws IOException {
+    public void train(Integer trainData, Integer testFieldValue) {
         initSparkSession();
 
+        // TODO: 12/6/2017  do it in a concurrent
         List<LabeledImage> labeledImages = idxReader.loadData(trainData);
         List<LabeledImage> testLabeledImages = idxReader.loadTestData(testFieldValue);
+
         Dataset<Row> train = sparkSession.createDataFrame(labeledImages, LabeledImage.class).checkpoint();
         Dataset<Row> test = sparkSession.createDataFrame(testLabeledImages, LabeledImage.class).checkpoint();
 
@@ -72,7 +74,11 @@ public class NeuralNetwork {
         model = trainer.fit(train);
 
         // after saving we have to load NN from trained data set
-        model.save(PATH_TO_TRAINED_SET + FOLDER_ROOT + trainData);
+        try {
+            model.save(PATH_TO_TRAINED_SET + FOLDER_ROOT + trainData);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         init(trainData, true);
         if (isModelUploaded) {
             LOGGER.info("NEURAL NETWORK trained with " + trainData + " has been uploaded successfully");
