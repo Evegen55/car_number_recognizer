@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,17 +32,28 @@ public class IdxReader {
         try (FileInputStream inImage = new FileInputStream(inputImagePath);
              FileInputStream inLabel = new FileInputStream(inputLabelPath)) {
 
+            // it reads the next byte of data (8 bits) then put them to left side of an int
+            // so the int is 32 bit is fully filled at the end of logic
+            // and it moves the cursor to a position after first 32 bits (4 bytes)
             int magicNumberImages = (inImage.read() << 24) | (inImage.read() << 16) | (inImage.read() << 8) | (inImage.read());
             int numberOfImages = (inImage.read() << 24) | (inImage.read() << 16) | (inImage.read() << 8) | (inImage.read());
+            System.out.println("magicNumberImages: " + magicNumberImages);
+            System.out.println("numberOfImages: " + numberOfImages);
 
             int numberOfRows = (inImage.read() << 24) | (inImage.read() << 16) | (inImage.read() << 8) | (inImage.read());
             int numberOfColumns = (inImage.read() << 24) | (inImage.read() << 16) | (inImage.read() << 8) | (inImage.read());
 
+            // it reads the next byte of data (8 bits) then put them to left side of an int
+            // so the int is 32 bit is fully filled at the end of logic
+            // and it moves the cursor to a position after first 32 bits (4 bytes)
             int magicNumberLabels = (inLabel.read() << 24) | (inLabel.read() << 16) | (inLabel.read() << 8) | (inLabel.read());
             int numberOfLabels = (inLabel.read() << 24) | (inLabel.read() << 16) | (inLabel.read() << 8) | (inLabel.read());
+            System.out.println("magicNumberLabels: " + magicNumberLabels);
+            System.out.println("numberOfLabels: " + numberOfLabels);
 
             int numberOfPixels = numberOfRows * numberOfColumns;
 
+            //empty array for 784 pixels - the image from 28x28 pixels in a single row
             double[] imgPixels = new double[numberOfPixels];
 
             LOGGER.info("Creating ADT filed with Labeled Images ...");
@@ -53,12 +63,13 @@ public class IdxReader {
                 if (i % 1000 == 0) {
                     LOGGER.info("Number of images extracted: " + i);
                 }
-
+                //it fills the array of pixels
                 for (int p = 0; p < numberOfPixels; p++) {
                     imgPixels[p] = inImage.read();
                 }
-
+                //it creates a label for that
                 int label = inLabel.read();
+                //it creates a compound object and adds them to a list
                 labeledImageArrayList.add(new LabeledImage(label, imgPixels));
             }
             LOGGER.info("Time to load LabeledImages in seconds: " + ((System.currentTimeMillis() - start) / 1000d));
