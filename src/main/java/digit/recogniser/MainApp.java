@@ -29,17 +29,17 @@ public class MainApp {
         progressBar.showProgressBar("Collecting data this make take several seconds!");
 
         final UI ui = new UI();
-
-        new Thread(() -> {
-            try {
-                ui.initUI();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            } finally {
-                progressBar.setVisible(false);
-                MAIN_FRAME.dispose();
-            }
-        }).start();
+        EXECUTOR_SERVICE.submit(ui::initUI);
+//        new Thread(() -> {
+//            try {
+//
+//            } catch (Exception e) {
+//                throw new RuntimeException(e);
+//            } finally {
+//                progressBar.setVisible(false);
+//                MAIN_FRAME.dispose();
+//            }
+//        }).start();
 
     }
 

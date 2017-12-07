@@ -86,6 +86,7 @@ public class NeuralNetwork {
 
         evalOnTest(test);
         evalOnTest(train);
+
     }
 
     private void evalOnTest(final Dataset<Row> rowDataset) {

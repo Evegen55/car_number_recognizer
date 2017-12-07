@@ -1,17 +1,14 @@
 package digit.recogniser.data;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
 import static digit.recogniser.data.IdxReader.INPUT_IMAGE_PATH;
 import static digit.recogniser.data.IdxReader.INPUT_LABEL_PATH;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author (created on 12/7/2017).
@@ -19,10 +16,6 @@ import static org.junit.Assert.*;
 public class IdxReaderTest {
 
     List<LabeledImage> labeledImages;
-
-    @After
-    public void tearDown() throws Exception {
-    }
 
     @Test
     public void loadDataOne_Thousand() throws Exception {
@@ -41,6 +34,7 @@ public class IdxReaderTest {
 
     @Test
     public void loadTestData() throws Exception {
+        labeledImages = IdxReader.loadTestData(10000);
     }
 
     /**

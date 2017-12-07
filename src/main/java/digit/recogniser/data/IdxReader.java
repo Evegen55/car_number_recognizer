@@ -18,7 +18,6 @@ public class IdxReader {
     public static final String RESOURCES_FOR_TRAIN_T10K_LABELS_IDX1_UBYTE = "resources_for_train/t10k-labels.idx1-ubyte";
 
     /**
-     *
      * @param size
      * @return
      */
@@ -27,7 +26,6 @@ public class IdxReader {
     }
 
     /**
-     *
      * @param size
      * @return
      */
@@ -66,8 +64,8 @@ public class IdxReader {
                     LOGGER.info("Number of images extracted: " + i);
                 }
                 //it fills the array of pixels
-                for (int p = 0; p < numberOfPixels; p++) {
-                    imgPixels[p] = inImage.read();
+                for (int index = 0; index < numberOfPixels; index++) {
+                    imgPixels[index] = inImage.read();
                 }
                 //it creates a label for that
                 int label = inLabel.read();
