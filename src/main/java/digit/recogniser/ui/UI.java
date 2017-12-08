@@ -180,11 +180,9 @@ public class UI {
         LOGGER.info("NEURAL_NETWORK starting train");
         Runnable runnable = () -> {
             try {
-
                 final Integer trainFieldValue = (Integer) trainField.getValue();
                 final Integer testFieldValue = (Integer) testField.getValue();
-
-                NEURAL_NETWORK.train(trainFieldValue, testFieldValue, true);
+                NEURAL_NETWORK.train(trainFieldValue, testFieldValue, true, null);
             } finally {
                 progressBar.setVisible(false);
             }

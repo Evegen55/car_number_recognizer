@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 
+import static digit.recogniser.data.IdxReader.VECTOR_DIMENSION;
+
 public class NeuralNetwork {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(NeuralNetwork.class);
@@ -24,6 +26,8 @@ public class NeuralNetwork {
     private static final String PATH_TO_TRAINED_SET = "TrainedModels";
     private static final String FOLDER_ROOT = "\\ModelWith";
     private static final String PATH_TO_TRAINED_SET_INIT = PATH_TO_TRAINED_SET + FOLDER_ROOT;
+
+    public static final int NEURAL_OUTPUT_CLASSES = 10;
 
     private boolean isModelUploaded = false;
 
@@ -49,7 +53,7 @@ public class NeuralNetwork {
         }
     }
 
-    public void train(Integer trainData, Integer testFieldValue, final boolean saveOrNot) {
+    public void train(Integer trainData, Integer testFieldValue, final boolean saveOrNot, int[] layers) {
         initSparkSession();
 
         List<LabeledImage> labeledImages = IdxReader.loadData(trainData);
@@ -57,10 +61,13 @@ public class NeuralNetwork {
         Dataset<Row> train = sparkSession.createDataFrame(labeledImages, LabeledImage.class).checkpoint();
         Dataset<Row> test = sparkSession.createDataFrame(testLabeledImages, LabeledImage.class).checkpoint();
 
-        //first layer is an image 28x28 pixels -> 784 pixels
-        //last layer is a digit from 0 to 9, the output is a one dimensional vector of size 10.
-        //The values of output vector are probabilities that the input is likely to be one of those digits.
-        int[] layers = new int[]{784, 128, 64, 10}; // TODO: 12/6/2017 it can gets from UI
+        if (layers == null) {
+            //DEFAULT VALUE
+            //first layer is an image 28x28 pixels -> 784 pixels
+            //last layer is a digit from 0 to 9, the output is a one dimensional vector of size 10.
+            //The values of output vector are probabilities that the input is likely to be one of those digits.
+            layers = new int[]{VECTOR_DIMENSION, 128, 64, NEURAL_OUTPUT_CLASSES};
+        }
 
         MultilayerPerceptronClassifier trainer = new MultilayerPerceptronClassifier()
                 .setLayers(layers)
@@ -105,10 +112,17 @@ public class NeuralNetwork {
                     .appName("Digit Recognizer")
                     .getOrCreate();
         }
-
         sparkSession.sparkContext().setCheckpointDir("checkPoint");
     }
 
+    /**
+     * the output labeled image consists of vector with features BEFORE prediction
+     * and
+     * label AFTER prediction
+     *
+     * @param labeledImage
+     * @return
+     */
     public LabeledImage predict(LabeledImage labeledImage) {
         double predict = model.predict(labeledImage.getFeatures());
         labeledImage.setLabel(predict);

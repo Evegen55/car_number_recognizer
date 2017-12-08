@@ -17,6 +17,8 @@ public class IdxReader {
     public static final String INPUT_IMAGE_PATH_FOR_LOADING_TEST_DATA = "resources_for_train/t10k-images.idx3-ubyte";
     public static final String RESOURCES_FOR_TRAIN_T10K_LABELS_IDX1_UBYTE = "resources_for_train/t10k-labels.idx1-ubyte";
 
+    public static final int VECTOR_DIMENSION = 784; //square 28*28 as from data set -> array 784 items
+
     /**
      * @param size
      * @return
@@ -49,12 +51,8 @@ public class IdxReader {
             LOGGER.debug("Available bytes in inputImage stream after read: " + inImage.available());
             LOGGER.debug("Available bytes in inputLabel stream after read: " + inLabel.available());
 
-            int numberOfRows = 28;
-            int numberOfColumns = 28;
-            int numberOfPixels = numberOfRows * numberOfColumns;
-
             //empty array for 784 pixels - the image from 28x28 pixels in a single row
-            double[] imgPixels = new double[numberOfPixels];
+            double[] imgPixels = new double[VECTOR_DIMENSION];
 
             LOGGER.info("Creating ADT filed with Labeled Images ...");
             long start = System.currentTimeMillis();
@@ -64,7 +62,7 @@ public class IdxReader {
                     LOGGER.info("Number of images extracted: " + i);
                 }
                 //it fills the array of pixels
-                for (int index = 0; index < numberOfPixels; index++) {
+                for (int index = 0; index < VECTOR_DIMENSION; index++) {
                     imgPixels[index] = inImage.read();
                 }
                 //it creates a label for that
@@ -73,7 +71,6 @@ public class IdxReader {
                 labeledImageArrayList.add(new LabeledImage(label, imgPixels));
             }
             LOGGER.info("Time to load LabeledImages in seconds: " + ((System.currentTimeMillis() - start) / 1000d));
-
         } catch (Exception e) {
             LOGGER.error("Smth went wrong: \n");
             e.printStackTrace();
