@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 
+import static digit.recogniser.data.IdxReader.VECTOR_DIMENSION;
+
 public class NeuralNetwork {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(NeuralNetwork.class);
@@ -21,10 +23,11 @@ public class NeuralNetwork {
     private SparkSession sparkSession;
     private MultilayerPerceptronClassificationModel model;
 
-    private static final IdxReader idxReader = new IdxReader();
     private static final String PATH_TO_TRAINED_SET = "TrainedModels";
     private static final String FOLDER_ROOT = "\\ModelWith";
     private static final String PATH_TO_TRAINED_SET_INIT = PATH_TO_TRAINED_SET + FOLDER_ROOT;
+
+    public static final int NEURAL_OUTPUT_CLASSES = 10;
 
     private boolean isModelUploaded = false;
 
@@ -50,18 +53,21 @@ public class NeuralNetwork {
         }
     }
 
-    public void train(Integer trainData, Integer testFieldValue) throws IOException {
+    public void train(Integer trainData, Integer testFieldValue, final boolean saveOrNot, int[] layers) {
         initSparkSession();
 
-        List<LabeledImage> labeledImages = idxReader.loadData(trainData);
-        List<LabeledImage> testLabeledImages = idxReader.loadTestData(testFieldValue);
+        List<LabeledImage> labeledImages = IdxReader.loadData(trainData);
+        List<LabeledImage> testLabeledImages = IdxReader.loadTestData(testFieldValue);
         Dataset<Row> train = sparkSession.createDataFrame(labeledImages, LabeledImage.class).checkpoint();
         Dataset<Row> test = sparkSession.createDataFrame(testLabeledImages, LabeledImage.class).checkpoint();
 
-        //first layer is an image 28x28 pixels -> 784 pixels
-        //last layer is a digit from 0 to 9, the output is a one dimensional vector of size 10.
-        //The values of output vector are probabilities that the input is likely to be one of those digits.
-        int[] layers = new int[]{784, 128, 64, 10}; // TODO: 12/6/2017 it can gets from UI
+        if (layers == null) {
+            //DEFAULT VALUE
+            //first layer is an image 28x28 pixels -> 784 pixels
+            //last layer is a digit from 0 to 9, the output is a one dimensional vector of size 10.
+            //The values of output vector are probabilities that the input is likely to be one of those digits.
+            layers = new int[]{VECTOR_DIMENSION, 128, 64, NEURAL_OUTPUT_CLASSES};
+        }
 
         MultilayerPerceptronClassifier trainer = new MultilayerPerceptronClassifier()
                 .setLayers(layers)
@@ -71,15 +77,23 @@ public class NeuralNetwork {
 
         model = trainer.fit(train);
 
-        // after saving we have to load NN from trained data set
-        model.save(PATH_TO_TRAINED_SET + FOLDER_ROOT + trainData);
-        init(trainData, true);
-        if (isModelUploaded) {
-            LOGGER.info("NEURAL NETWORK trained with " + trainData + " has been uploaded successfully");
+        if (saveOrNot) {
+            // after saving we have to load NN from trained data set
+            try {
+                model.save(PATH_TO_TRAINED_SET + FOLDER_ROOT + trainData);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            init(trainData, true);
+            if (isModelUploaded) {
+                LOGGER.info("NEURAL NETWORK trained with " + trainData + " has been uploaded successfully");
+            }
         }
+
 
         evalOnTest(test);
         evalOnTest(train);
+
     }
 
     private void evalOnTest(final Dataset<Row> rowDataset) {
@@ -98,10 +112,17 @@ public class NeuralNetwork {
                     .appName("Digit Recognizer")
                     .getOrCreate();
         }
-
         sparkSession.sparkContext().setCheckpointDir("checkPoint");
     }
 
+    /**
+     * the output labeled image consists of vector with features BEFORE prediction
+     * and
+     * label AFTER prediction
+     *
+     * @param labeledImage
+     * @return
+     */
     public LabeledImage predict(LabeledImage labeledImage) {
         double predict = model.predict(labeledImage.getFeatures());
         labeledImage.setLabel(predict);

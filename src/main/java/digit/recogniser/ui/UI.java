@@ -14,7 +14,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.concurrent.Future;
+import java.util.stream.Stream;
 
 import static digit.recogniser.MainApp.EXECUTOR_SERVICE;
 
@@ -110,15 +112,22 @@ public class UI {
 
         LabeledImage predict = NEURAL_NETWORK.predict(labeledImage);
         final double predictLabel = predict.getLabel();
-
+        writeImageAsIs(predict);
         final JLabel predictNumber = new JLabel("" + (int) predictLabel);
-        LOGGER.info("Probabilities is: " + predict.getFeatures().size());
 
         predictNumber.setForeground(Color.RED);
         predictNumber.setFont(new Font("SansSerif", Font.BOLD, 128));
         resultPanel.removeAll();
         resultPanel.add(predictNumber);
         resultPanel.updateUI();
+    }
+
+    private void writeImageAsIs(final LabeledImage labeledImage) {
+        System.out.println(labeledImage.getLabel());
+        final double[] doubles = labeledImage.getFeatures().toArray();
+        for (int i = 0; i < doubles.length; i++) {
+            System.out.println(doubles[i]);
+        }
     }
 
     private void addDrawAreaAndPredictionArea() {
@@ -171,13 +180,9 @@ public class UI {
         LOGGER.info("NEURAL_NETWORK starting train");
         Runnable runnable = () -> {
             try {
-
                 final Integer trainFieldValue = (Integer) trainField.getValue();
                 final Integer testFieldValue = (Integer) testField.getValue();
-
-                NEURAL_NETWORK.train(trainFieldValue, testFieldValue);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                NEURAL_NETWORK.train(trainFieldValue, testFieldValue, true, null);
             } finally {
                 progressBar.setVisible(false);
             }

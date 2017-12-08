@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,66 +11,72 @@ public class IdxReader {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(IdxReader.class);
 
-    private static final String INPUT_IMAGE_PATH = "resources_for_train/train-images.idx3-ubyte";
-    private static final String INPUT_LABEL_PATH = "resources_for_train/train-labels.idx1-ubyte";
+    public static final String INPUT_IMAGE_PATH = "resources_for_train/train-images.idx3-ubyte";
+    public static final String INPUT_LABEL_PATH = "resources_for_train/train-labels.idx1-ubyte";
 
-    private static final String INPUT_IMAGE_PATH_FOR_LOADING_TEST_DATA = "resources_for_train/t10k-images.idx3-ubyte";
-    private static final String RESOURCES_FOR_TRAIN_T10K_LABELS_IDX1_UBYTE = "resources_for_train/t10k-labels.idx1-ubyte";
+    public static final String INPUT_IMAGE_PATH_FOR_LOADING_TEST_DATA = "resources_for_train/t10k-images.idx3-ubyte";
+    public static final String RESOURCES_FOR_TRAIN_T10K_LABELS_IDX1_UBYTE = "resources_for_train/t10k-labels.idx1-ubyte";
 
-    public java.util.List<LabeledImage> loadData(int size) throws IOException {
+    public static final int VECTOR_DIMENSION = 784; //square 28*28 as from data set -> array 784 items
+
+    /**
+     * @param size
+     * @return
+     */
+    public static List<LabeledImage> loadData(final int size) {
         return getLabeledImages(INPUT_IMAGE_PATH, INPUT_LABEL_PATH, size);
     }
 
-    public java.util.List<LabeledImage> loadTestData(int size) throws IOException {
+    /**
+     * @param size
+     * @return
+     */
+    public static List<LabeledImage> loadTestData(final int size) {
         return getLabeledImages(INPUT_IMAGE_PATH_FOR_LOADING_TEST_DATA, RESOURCES_FOR_TRAIN_T10K_LABELS_IDX1_UBYTE, size);
     }
 
-    private List<LabeledImage> getLabeledImages(String inputImagePath, String inputLabelPath, int number) throws IOException {
-        FileInputStream inLabel = null;
-        FileInputStream inImage = null;
+    private static List<LabeledImage> getLabeledImages(final String inputImagePath,
+                                                       final String inputLabelPath,
+                                                       final int amountOfDataSet) {
 
-        try {
-            inImage = new FileInputStream(inputImagePath);
-            inLabel = new FileInputStream(inputLabelPath);
+        final List<LabeledImage> labeledImageArrayList = new ArrayList<>(amountOfDataSet);
 
-            int magicNumberImages = (inImage.read() << 24) | (inImage.read() << 16) | (inImage.read() << 8) | (inImage.read());
-            int numberOfImages = (inImage.read() << 24) | (inImage.read() << 16) | (inImage.read() << 8) | (inImage.read());
+        try (FileInputStream inImage = new FileInputStream(inputImagePath);
+             FileInputStream inLabel = new FileInputStream(inputLabelPath)) {
 
-            int numberOfRows = (inImage.read() << 24) | (inImage.read() << 16) | (inImage.read() << 8) | (inImage.read());
-            int numberOfColumns = (inImage.read() << 24) | (inImage.read() << 16) | (inImage.read() << 8) | (inImage.read());
+            // just skip the amount of a data
+            // see the test and description for dataset
+            inImage.skip(16);
+            inLabel.skip(8);
+            LOGGER.debug("Available bytes in inputImage stream after read: " + inImage.available());
+            LOGGER.debug("Available bytes in inputLabel stream after read: " + inLabel.available());
 
-            int magicNumberLabels = (inLabel.read() << 24) | (inLabel.read() << 16) | (inLabel.read() << 8) | (inLabel.read());
-            int numberOfLabels = (inLabel.read() << 24) | (inLabel.read() << 16) | (inLabel.read() << 8) | (inLabel.read());
+            //empty array for 784 pixels - the image from 28x28 pixels in a single row
+            double[] imgPixels = new double[VECTOR_DIMENSION];
 
-            int numberOfPixels = numberOfRows * numberOfColumns;
-            double[] imgPixels = new double[numberOfPixels];
-            List<LabeledImage> all = new ArrayList<>();
-
+            LOGGER.info("Creating ADT filed with Labeled Images ...");
             long start = System.currentTimeMillis();
-            for (int i = 0; i < number; i++) {
+            for (int i = 0; i < amountOfDataSet; i++) {
 
                 if (i % 1000 == 0) {
                     LOGGER.info("Number of images extracted: " + i);
                 }
-
-                for (int p = 0; p < numberOfPixels; p++) {
-                    imgPixels[p] = inImage.read();
+                //it fills the array of pixels
+                for (int index = 0; index < VECTOR_DIMENSION; index++) {
+                    imgPixels[index] = inImage.read();
                 }
-
+                //it creates a label for that
                 int label = inLabel.read();
-                all.add(new LabeledImage(label, imgPixels));
+                //it creates a compound object and adds them to a list
+                labeledImageArrayList.add(new LabeledImage(label, imgPixels));
             }
             LOGGER.info("Time to load LabeledImages in seconds: " + ((System.currentTimeMillis() - start) / 1000d));
-            return all;
-
-        } finally {
-            if (inImage != null) {
-                inImage.close();
-            }
-            if (inLabel != null) {
-                inLabel.close();
-            }
+        } catch (Exception e) {
+            LOGGER.error("Smth went wrong: \n");
+            e.printStackTrace();
         }
+
+        return labeledImageArrayList;
     }
 
 }
