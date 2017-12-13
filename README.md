@@ -1,7 +1,10 @@
 # First sketch
-Java Digit Recognizer Application 
 
 ## License
+
+One of a logic branch here grows from [DigitRecognizer](https://github.com/klevis/DigitRecognizer) project by [Klevis Ramo](https://github.com/klevis).
+
+Thank you very much for starting point!
 
 Copyright (C) 2017 - 2017 Evgenii Lartcev (https://github.com/Evegen55/) and contributors
 
