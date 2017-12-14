@@ -69,7 +69,7 @@ public class NeuralNetwork {
             layers = new int[]{VECTOR_DIMENSION, 128, 64, NEURAL_OUTPUT_CLASSES};
         }
 
-        MultilayerPerceptronClassifier trainer = new MultilayerPerceptronClassifier()
+        MultilayerPerceptronClassifier trainer = new MultilayerPerceptronClassifier("My MultilayerPerceptronClassifier")
                 .setLayers(layers)
                 .setBlockSize(128)
                 .setSeed(1234L)
@@ -82,6 +82,7 @@ public class NeuralNetwork {
             try {
                 model.save(PATH_TO_TRAINED_SET + FOLDER_ROOT + trainData);
             } catch (IOException e) {
+                LOGGER.error("Smth went wrong" + e);
                 e.printStackTrace();
             }
             init(trainData, true);
@@ -89,8 +90,6 @@ public class NeuralNetwork {
                 LOGGER.info("NEURAL NETWORK trained with " + trainData + " has been uploaded successfully");
             }
         }
-
-
         evalOnTest(test);
         evalOnTest(train);
 
