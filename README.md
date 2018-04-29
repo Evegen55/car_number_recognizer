@@ -1,4 +1,6 @@
-# First sketch
+# Computer Vision by using ML with Spark.
+
+SparkUI will be available at [http://192.168.0.110:4040/jobs/]()http://192.168.0.110:4040/jobs/)
 
 ## License
 
