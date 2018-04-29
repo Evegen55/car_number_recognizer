@@ -9,6 +9,10 @@ It will be saved to files inside the checkpoint directory set with SparkContext#
 But using javaSparkContext.parallelize(labeledImages).cache() can be significantly faster in order to use 
 caching into memory.
 
+Structure of DataSet
+![**Structure of DataSet**](https://raw.githubusercontent.com/Evegen55/car_number_recognizer/master/src/test/resources/for_readme/dataset_structure.PNG)
+
+
 
 ## License
 

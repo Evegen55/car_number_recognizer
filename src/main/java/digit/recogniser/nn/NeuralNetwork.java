@@ -60,14 +60,17 @@ public class NeuralNetwork {
     public void train(Integer trainData, Integer testFieldValue, final boolean saveOrNot, int[] layers) {
         initSparkSession();
 
-        List<LabeledImage> labeledImages = IdxReader.loadData(trainData);
-        List<LabeledImage> testLabeledImages = IdxReader.loadTestData(testFieldValue);
+        final List<LabeledImage> labeledImages = IdxReader.loadData(trainData);
+        final List<LabeledImage> testLabeledImages = IdxReader.loadTestData(testFieldValue);
 
         // By using this approach it will achieve better performance
-        JavaRDD<LabeledImage> labeledImageJavaRDDtrain = javaSparkContext.parallelize(labeledImages).cache();
-        JavaRDD<LabeledImage> labeledImageJavaRDDtest = javaSparkContext.parallelize(testLabeledImages).cache();
-        Dataset<Row> train = sparkSession.createDataFrame(labeledImageJavaRDDtrain, LabeledImage.class);
-        Dataset<Row> test = sparkSession.createDataFrame(labeledImageJavaRDDtest, LabeledImage.class);
+        final JavaRDD<LabeledImage> labeledImageJavaRDDtrain = javaSparkContext.parallelize(labeledImages).cache();
+        final JavaRDD<LabeledImage> labeledImageJavaRDDtest = javaSparkContext.parallelize(testLabeledImages).cache();
+        final Dataset<Row> train = sparkSession.createDataFrame(labeledImageJavaRDDtrain, LabeledImage.class);
+        final Dataset<Row> test = sparkSession.createDataFrame(labeledImageJavaRDDtest, LabeledImage.class);
+
+        train.show();
+        test.show();
 
         if (layers == null) {
             //DEFAULT VALUE
