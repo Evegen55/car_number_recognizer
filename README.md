@@ -2,6 +2,14 @@
 
 SparkUI will be available at [http://192.168.0.110:4040/jobs/]()http://192.168.0.110:4040/jobs/)
 
+If we uses Dataset.checkpoint(), it returns a checkpointed version of this dataset. 
+Checkpointing can be used to truncate the logical plan of this dataset, which is especially useful 
+in iterative algorithms where the plan may grow exponentially. 
+It will be saved to files inside the checkpoint directory set with SparkContext#setCheckpointDir.
+But using javaSparkContext.parallelize(labeledImages).cache() can be significantly faster in order to use 
+caching into memory.
+
+
 ## License
 
 One of a logic branch here grows from [DigitRecognizer](https://github.com/klevis/DigitRecognizer) project by [Klevis Ramo](https://github.com/klevis).

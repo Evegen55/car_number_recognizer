@@ -2,6 +2,9 @@ package digit.recogniser.nn;
 
 import digit.recogniser.data.IdxReader;
 import digit.recogniser.data.LabeledImage;
+import org.apache.spark.SparkContext;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.ml.classification.MultilayerPerceptronClassificationModel;
 import org.apache.spark.ml.classification.MultilayerPerceptronClassifier;
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator;
@@ -21,6 +24,7 @@ public class NeuralNetwork {
     private final static Logger LOGGER = LoggerFactory.getLogger(NeuralNetwork.class);
 
     private SparkSession sparkSession;
+    private JavaSparkContext javaSparkContext;
     private MultilayerPerceptronClassificationModel model;
 
     private static final String PATH_TO_TRAINED_SET = "TrainedModels";
@@ -58,8 +62,12 @@ public class NeuralNetwork {
 
         List<LabeledImage> labeledImages = IdxReader.loadData(trainData);
         List<LabeledImage> testLabeledImages = IdxReader.loadTestData(testFieldValue);
-        Dataset<Row> train = sparkSession.createDataFrame(labeledImages, LabeledImage.class).checkpoint();
-        Dataset<Row> test = sparkSession.createDataFrame(testLabeledImages, LabeledImage.class).checkpoint();
+
+        // By using this approach it will achieve better performance
+        JavaRDD<LabeledImage> labeledImageJavaRDDtrain = javaSparkContext.parallelize(labeledImages).cache();
+        JavaRDD<LabeledImage> labeledImageJavaRDDtest = javaSparkContext.parallelize(testLabeledImages).cache();
+        Dataset<Row> train = sparkSession.createDataFrame(labeledImageJavaRDDtrain, LabeledImage.class);
+        Dataset<Row> test = sparkSession.createDataFrame(labeledImageJavaRDDtest, LabeledImage.class);
 
         if (layers == null) {
             //DEFAULT VALUE
@@ -109,10 +117,11 @@ public class NeuralNetwork {
         if (sparkSession == null) {
             sparkSession = SparkSession.builder()
                     .master("local[*]")
-                    .appName("Digit Recognizer")
+                    .appName("Car Number Recognizer")
                     .getOrCreate();
         }
-        sparkSession.sparkContext().setCheckpointDir("checkPoint");
+        SparkContext sparkContext = sparkSession.sparkContext();
+        javaSparkContext = new JavaSparkContext(sparkContext);
     }
 
     /**
