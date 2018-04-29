@@ -1,6 +1,6 @@
 # Computer Vision by using ML with Spark.
 
-SparkUI will be available at [localhost:4040/jobs/](localhost:4040/jobs/)
+SparkUI will be available at [localhost:4040/jobs/](http://localhost:4040/jobs/)
 
 If we uses Dataset.checkpoint(), it returns a checkpointed version of this dataset. 
 Checkpointing can be used to truncate the logical plan of this dataset, which is especially useful 
