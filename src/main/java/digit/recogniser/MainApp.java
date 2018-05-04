@@ -21,9 +21,14 @@ public class MainApp {
 
     public static void main(String... args) throws Exception {
 
-        LOGGER.info("Setting up the HADOOP_HOME environment variable");
-        setHadoopHomeEnvironmentVariable();
-        LOGGER.info("The HADOOP_HOME environment variable is done");
+
+        String os = System.getProperty("os.name").toLowerCase();
+        if(os.contains("win")) {
+            LOGGER.info("Working under Windows OS family requires some additional steps...");
+            LOGGER.info("Setting up the HADOOP_HOME environment variable");
+            setHadoopHomeEnvironmentVariable();
+            LOGGER.info("The HADOOP_HOME environment variable is done");
+        }
 
         final ProgressBar progressBar = new ProgressBar(MAIN_FRAME, true);
         progressBar.showProgressBar("Collecting data this make take several seconds!");
