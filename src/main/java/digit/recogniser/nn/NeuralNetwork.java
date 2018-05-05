@@ -28,7 +28,7 @@ public class NeuralNetwork {
     private MultilayerPerceptronClassificationModel model;
 
     private static final String PATH_TO_TRAINED_SET = "TrainedModels";
-    private static final String FOLDER_ROOT = "\\ModelWith";
+    private static final String FOLDER_ROOT = "/ModelWith";
     private static final String PATH_TO_TRAINED_SET_INIT = PATH_TO_TRAINED_SET + FOLDER_ROOT;
 
     public static final int NEURAL_OUTPUT_CLASSES = 10;
@@ -60,14 +60,21 @@ public class NeuralNetwork {
     public void train(Integer trainData, Integer testFieldValue, final boolean saveOrNot, int[] layers) {
         initSparkSession();
 
-        final List<LabeledImage> labeledImages = IdxReader.loadData(trainData);
-        final List<LabeledImage> testLabeledImages = IdxReader.loadTestData(testFieldValue);
+        List<LabeledImage> labeledImages = IdxReader.loadData(trainData);
+        List<LabeledImage> testLabeledImages = IdxReader.loadTestData(testFieldValue);
 
         // By using this approach it will achieve better performance
-        final JavaRDD<LabeledImage> labeledImageJavaRDDtrain = javaSparkContext.parallelize(labeledImages).cache();
-        final JavaRDD<LabeledImage> labeledImageJavaRDDtest = javaSparkContext.parallelize(testLabeledImages).cache();
-        final Dataset<Row> train = sparkSession.createDataFrame(labeledImageJavaRDDtrain, LabeledImage.class);
-        final Dataset<Row> test = sparkSession.createDataFrame(labeledImageJavaRDDtest, LabeledImage.class);
+        JavaRDD<LabeledImage> labeledImageJavaRDDtrain = javaSparkContext.parallelize(labeledImages);
+        JavaRDD<LabeledImage> labeledImageJavaRDDtest = javaSparkContext.parallelize(testLabeledImages);
+
+        final Dataset<Row> train = sparkSession.createDataFrame(labeledImageJavaRDDtrain, LabeledImage.class).cache();
+        final Dataset<Row> test = sparkSession.createDataFrame(labeledImageJavaRDDtest, LabeledImage.class).cache();
+
+        System.gc();
+        labeledImages = null;
+        testLabeledImages = null;
+        labeledImageJavaRDDtrain = null;
+        labeledImageJavaRDDtest = null;
 
         train.show();
         test.show();

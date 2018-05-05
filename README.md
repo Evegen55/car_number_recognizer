@@ -12,7 +12,7 @@ caching into memory.
 Structure of DataSet
 ![**Structure of DataSet**](https://raw.githubusercontent.com/Evegen55/car_number_recognizer/master/src/test/resources/for_readme/dataset_structure.PNG)
 
-
+JVM arguments -Xmx4096m
 
 ## License
 
