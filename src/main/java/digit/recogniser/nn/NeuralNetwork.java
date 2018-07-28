@@ -2,9 +2,6 @@ package digit.recogniser.nn;
 
 import digit.recogniser.data.IdxReader;
 import digit.recogniser.data.LabeledImage;
-import org.apache.spark.SparkContext;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.ml.classification.MultilayerPerceptronClassificationModel;
 import org.apache.spark.ml.classification.MultilayerPerceptronClassifier;
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator;
@@ -24,7 +21,6 @@ public class NeuralNetwork {
     private final static Logger LOGGER = LoggerFactory.getLogger(NeuralNetwork.class);
 
     private SparkSession sparkSession;
-    private JavaSparkContext javaSparkContext;
     private MultilayerPerceptronClassificationModel model;
 
     private static final String PATH_TO_TRAINED_SET = "TrainedModels";
@@ -60,24 +56,20 @@ public class NeuralNetwork {
     public void train(Integer trainData, Integer testFieldValue, final boolean saveOrNot, int[] layers) {
         initSparkSession();
 
+//        Dataset<Row> df1 = spark.read()
+//                .format("csv").option("inferSchema", "true")
+//                .option("header", "false")
+//                .load(filename);
+
+        // TODO: 27.06.18 try cache
         List<LabeledImage> labeledImages = IdxReader.loadData(trainData);
         List<LabeledImage> testLabeledImages = IdxReader.loadTestData(testFieldValue);
-
-        // By using this approach it will achieve better performance
-        JavaRDD<LabeledImage> labeledImageJavaRDDtrain = javaSparkContext.parallelize(labeledImages);
-        JavaRDD<LabeledImage> labeledImageJavaRDDtest = javaSparkContext.parallelize(testLabeledImages);
-
-        final Dataset<Row> train = sparkSession.createDataFrame(labeledImageJavaRDDtrain, LabeledImage.class).cache();
-        final Dataset<Row> test = sparkSession.createDataFrame(labeledImageJavaRDDtest, LabeledImage.class).cache();
-
-        System.gc();
+//        System.gc();
+        Dataset<Row> train = sparkSession.createDataFrame(labeledImages, LabeledImage.class).cache();
+        Dataset<Row> test = sparkSession.createDataFrame(testLabeledImages, LabeledImage.class).cache();
         labeledImages = null;
         testLabeledImages = null;
-        labeledImageJavaRDDtrain = null;
-        labeledImageJavaRDDtest = null;
-
-        train.show();
-        test.show();
+        System.gc();
 
         if (layers == null) {
             //DEFAULT VALUE
@@ -87,7 +79,7 @@ public class NeuralNetwork {
             layers = new int[]{VECTOR_DIMENSION, 128, 64, NEURAL_OUTPUT_CLASSES};
         }
 
-        MultilayerPerceptronClassifier trainer = new MultilayerPerceptronClassifier()
+        MultilayerPerceptronClassifier trainer = new MultilayerPerceptronClassifier("My MultilayerPerceptronClassifier")
                 .setLayers(layers)
                 .setBlockSize(128)
                 .setSeed(1234L)
@@ -100,6 +92,7 @@ public class NeuralNetwork {
             try {
                 model.save(PATH_TO_TRAINED_SET + FOLDER_ROOT + trainData);
             } catch (IOException e) {
+                LOGGER.error("Smth went wrong" + e);
                 e.printStackTrace();
             }
             init(trainData, true);
@@ -107,8 +100,6 @@ public class NeuralNetwork {
                 LOGGER.info("NEURAL NETWORK trained with " + trainData + " has been uploaded successfully");
             }
         }
-
-
         evalOnTest(test);
         evalOnTest(train);
 
@@ -127,11 +118,10 @@ public class NeuralNetwork {
         if (sparkSession == null) {
             sparkSession = SparkSession.builder()
                     .master("local[*]")
-                    .appName("Car Number Recognizer")
+                    .appName("Car's number recognizer")
                     .getOrCreate();
         }
-        SparkContext sparkContext = sparkSession.sparkContext();
-        javaSparkContext = new JavaSparkContext(sparkContext);
+//        sparkSession.sparkContext().setCheckpointDir("checkPoint");
     }
 
     /**
