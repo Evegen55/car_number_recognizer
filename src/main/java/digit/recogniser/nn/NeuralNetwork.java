@@ -2,6 +2,7 @@ package digit.recogniser.nn;
 
 import digit.recogniser.data.IdxReader;
 import digit.recogniser.data.LabeledImage;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.ml.classification.MultilayerPerceptronClassificationModel;
 import org.apache.spark.ml.classification.MultilayerPerceptronClassifier;
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator;
@@ -31,13 +32,14 @@ public class NeuralNetwork {
 
     private boolean isModelUploaded = false;
 
-    public void init(final int initialTrainSize, final boolean erasePreviousModel) {
+    public void init(final int initialTrainSize, final boolean erasePreviousLoadedModel) {
         initSparkSession();
-        if (model == null || erasePreviousModel) {
+        if (model == null || erasePreviousLoadedModel) {
             try {
                 LOGGER.info("Load model from trained set: " + FOLDER_ROOT + initialTrainSize);
                 model = MultilayerPerceptronClassificationModel.load(PATH_TO_TRAINED_SET_INIT + initialTrainSize);
                 isModelUploaded = true;
+                LOGGER.info("NEURAL NETWORK trained with " + initialTrainSize + " has been uploaded successfully");
             } catch (Exception e) {
                 /*
                 It tries to load metadata firstly
@@ -53,23 +55,17 @@ public class NeuralNetwork {
         }
     }
 
-    public void train(Integer trainData, Integer testFieldValue, final boolean saveOrNot, int[] layers) {
+    public void train(final int initialTrainSize, int testFieldValue, final boolean saveOrNot, int[] layers) {
         initSparkSession();
 
+        Dataset<Row> train = getTrainDataSetRow(initialTrainSize, sparkSession);
+        Dataset<Row> test = getTestDataSetRow(testFieldValue, sparkSession);
+
+//        JavaSparkContext javaSparkContext = new JavaSparkContext(sparkSession.sparkContext());
 //        Dataset<Row> df1 = spark.read()
 //                .format("csv").option("inferSchema", "true")
 //                .option("header", "false")
 //                .load(filename);
-
-        // TODO: 27.06.18 try cache
-        List<LabeledImage> labeledImages = IdxReader.loadData(trainData);
-        List<LabeledImage> testLabeledImages = IdxReader.loadTestData(testFieldValue);
-//        System.gc();
-        Dataset<Row> train = sparkSession.createDataFrame(labeledImages, LabeledImage.class).cache();
-        Dataset<Row> test = sparkSession.createDataFrame(testLabeledImages, LabeledImage.class).cache();
-        labeledImages = null;
-        testLabeledImages = null;
-        System.gc();
 
         if (layers == null) {
             //DEFAULT VALUE
@@ -90,27 +86,30 @@ public class NeuralNetwork {
         if (saveOrNot) {
             // after saving we have to load NN from trained data set
             try {
-                model.save(PATH_TO_TRAINED_SET + FOLDER_ROOT + trainData);
+                model.save(PATH_TO_TRAINED_SET + FOLDER_ROOT + initialTrainSize);
             } catch (IOException e) {
                 LOGGER.error("Smth went wrong" + e);
                 e.printStackTrace();
             }
-            init(trainData, true);
-            if (isModelUploaded) {
-                LOGGER.info("NEURAL NETWORK trained with " + trainData + " has been uploaded successfully");
-            }
+            init(initialTrainSize, true);
         }
         evalOnTest(test);
         evalOnTest(train);
+    }
 
+    private static Dataset<Row> getTestDataSetRow(final int testFieldValue, final SparkSession sparkSession) {
+        return sparkSession.createDataFrame(IdxReader.loadTestData(testFieldValue), LabeledImage.class).cache();
+    }
+
+    private static Dataset<Row> getTrainDataSetRow(final int initialTrainSize, final SparkSession sparkSession) {
+        return sparkSession.createDataFrame(IdxReader.loadData(initialTrainSize), LabeledImage.class).cache();
     }
 
     private void evalOnTest(final Dataset<Row> rowDataset) {
+        LOGGER.info("\nStart evaluate data.");
         final Dataset<Row> result = model.transform(rowDataset);
         final Dataset<Row> predictionAndLabels = result.select("prediction", "label");
-        final MulticlassClassificationEvaluator evaluator = new MulticlassClassificationEvaluator()
-                .setMetricName("accuracy");
-
+        final MulticlassClassificationEvaluator evaluator = new MulticlassClassificationEvaluator().setMetricName("accuracy");
         LOGGER.info("Test set accuracy = " + evaluator.evaluate(predictionAndLabels));
     }
 
@@ -118,6 +117,7 @@ public class NeuralNetwork {
         if (sparkSession == null) {
             sparkSession = SparkSession.builder()
                     .master("local[*]")
+//                                        .master("spark://192.168.0.55:7077")
                     .appName("Car's number recognizer")
                     .getOrCreate();
         }
@@ -125,9 +125,7 @@ public class NeuralNetwork {
     }
 
     /**
-     * the output labeled image consists of vector with features BEFORE prediction
-     * and
-     * label AFTER prediction
+     * the output labeled image consists of vector with features BEFORE prediction and label AFTER prediction
      *
      * @param labeledImage
      * @return
