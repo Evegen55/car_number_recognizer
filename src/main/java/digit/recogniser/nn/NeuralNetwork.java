@@ -2,7 +2,6 @@ package digit.recogniser.nn;
 
 import digit.recogniser.data.IdxReader;
 import digit.recogniser.data.LabeledImage;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.ml.classification.MultilayerPerceptronClassificationModel;
 import org.apache.spark.ml.classification.MultilayerPerceptronClassifier;
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator;
@@ -14,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Function;
 
 import static digit.recogniser.data.IdxReader.VECTOR_DIMENSION;
 
@@ -58,8 +58,8 @@ public class NeuralNetwork {
     public void train(final int initialTrainSize, int testFieldValue, final boolean saveOrNot, int[] layers) {
         initSparkSession();
 
-        Dataset<Row> train = getTrainDataSetRow(initialTrainSize, sparkSession);
-        Dataset<Row> test = getTestDataSetRow(testFieldValue, sparkSession);
+        Dataset<Row> train = getDataSetRow(IdxReader::loadData, initialTrainSize, sparkSession);
+        Dataset<Row> test = getDataSetRow(IdxReader::loadTestData, testFieldValue, sparkSession);
 
 //        JavaSparkContext javaSparkContext = new JavaSparkContext(sparkSession.sparkContext());
 //        Dataset<Row> df1 = spark.read()
@@ -97,12 +97,11 @@ public class NeuralNetwork {
         evalOnTest(train);
     }
 
-    private static Dataset<Row> getTestDataSetRow(final int testFieldValue, final SparkSession sparkSession) {
-        return sparkSession.createDataFrame(IdxReader.loadTestData(testFieldValue), LabeledImage.class).cache();
-    }
-
-    private static Dataset<Row> getTrainDataSetRow(final int initialTrainSize, final SparkSession sparkSession) {
-        return sparkSession.createDataFrame(IdxReader.loadData(initialTrainSize), LabeledImage.class).cache();
+    private static Dataset<Row> getDataSetRow(final Function<Integer, List<LabeledImage>> function,
+                                              final int initialTrainSize,
+                                              final SparkSession sparkSession) {
+        LOGGER.info("\nGetting dataset...");
+        return sparkSession.createDataFrame(function.apply(initialTrainSize), LabeledImage.class).cache();
     }
 
     private void evalOnTest(final Dataset<Row> rowDataset) {
@@ -130,7 +129,7 @@ public class NeuralNetwork {
      * @param labeledImage
      * @return
      */
-    public LabeledImage predict(LabeledImage labeledImage) {
+    public LabeledImage predict(final LabeledImage labeledImage) {
         double predict = model.predict(labeledImage.getFeatures());
         labeledImage.setLabel(predict);
         return labeledImage;
