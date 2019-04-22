@@ -59,11 +59,14 @@ public class NeuralNetwork {
         initSparkSession();
 
         Dataset<Row> train = getDataSetRow(IdxReader::loadData, initialTrainSize, sparkSession);
+        train.show();
         Dataset<Row> test = getDataSetRow(IdxReader::loadTestData, testFieldValue, sparkSession);
+        test.show();
 
 //        JavaSparkContext javaSparkContext = new JavaSparkContext(sparkSession.sparkContext());
 //        Dataset<Row> df1 = spark.read()
-//                .format("csv").option("inferSchema", "true")
+//                .format("csv")
+//                .option("inferSchema", "true")
 //                .option("header", "false")
 //                .load(filename);
 
@@ -75,7 +78,7 @@ public class NeuralNetwork {
             layers = new int[]{VECTOR_DIMENSION, 128, 64, NEURAL_OUTPUT_CLASSES};
         }
 
-        MultilayerPerceptronClassifier trainer = new MultilayerPerceptronClassifier("My MultilayerPerceptronClassifier")
+        final MultilayerPerceptronClassifier trainer = new MultilayerPerceptronClassifier("My MultilayerPerceptronClassifier")
                 .setLayers(layers)
                 .setBlockSize(128)
                 .setSeed(1234L)
